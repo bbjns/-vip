@@ -1,0 +1,13 @@
+import os
+
+TG_TOKEN = os.getenv("TG_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
+
+API_KEY = os.getenv("API_KEY")
+API_SECRET = os.getenv("API_SECRET")
+
+SYMBOL = "BTCUSDT"
+LEVERAGE = 10
+RISK_PER_TRADE = 0.02
+TAKE_PROFIT = 0.01
+STOP_LOSS = 0.005

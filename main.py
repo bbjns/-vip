@@ -2,8 +2,8 @@ import os
 import ccxt
 from telegram.ext import Updater, CommandHandler
 
-TG_TOKEN = os.getenv(@jsc6bot)
-CHAT_ID = str(os.getenv(@qy2200)
+TG_TOKEN = os.getenv(jsc6bot)
+CHAT_ID = str(os.getenv(qy2200))
 
 API_KEY = os.getenv(bg_7d494ac9f8b27e9b682f41bc3126ff73)
 API_SECRET = os.getenv(77a3bba9fcb9b0dea28bcadf8ae9e5d6500f881b3612e160735365d5fcdf3abb)
@@ -32,7 +32,7 @@ def balance(update, context):
         return
     balance = exchange.fetch_balance()
     usdt = balance['USDT']['free']
-    update.message.reply_text(f"USDT余额: {usdt}")
+    update.message.reply_text("USDT余额: " + str(usdt))
 
 def long(update, context):
     if not check_user(update):

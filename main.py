@@ -1,50 +1,64 @@
-import telebot
-import threading
-import time
-from config import TG_TOKEN, CHAT_ID
-from strategy import run_strategy
-from stats import get_stats
-from equity import max_drawdown
+import os
+import ccxt
+from telegram.ext import Updater, CommandHandler
 
-bot = telebot.TeleBot(TG_TOKEN)
-running = False
+TG_TOKEN = os.getenv(@jsc6bot)
+CHAT_ID = str(os.getenv(@qy2200)
 
-def menu():
-    from telebot.types import ReplyKeyboardMarkup
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("启动交易", "停止交易")
-    markup.row("交易统计", "最大回撤")
-    return markup
+API_KEY = os.getenv(bg_7d494ac9f8b27e9b682f41bc3126ff73)
+API_SECRET = os.getenv(77a3bba9fcb9b0dea28bcadf8ae9e5d6500f881b3612e160735365d5fcdf3abb)
+API_PASSWORD = os.getenv(577779188)
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(CHAT_ID, "量化交易系统已连接", reply_markup=menu())
+exchange = ccxt.bitget({
+    'apiKey': API_KEY,
+    'secret': API_SECRET,
+    'password': API_PASSWORD,
+    'enableRateLimit': True,
+    'options': {'defaultType': 'swap'}
+})
 
-@bot.message_handler(func=lambda message: True)
-def control(message):
-    global running
+def check_user(update):
+    return str(update.message.chat_id) == CHAT_ID
 
-    if message.text == "启动交易":
-        running = True
-        bot.send_message(CHAT_ID, "交易系统启动")
+def start(update, context):
+    if not check_user(update):
+        update.message.reply_text("无权限")
+        return
+    update.message.reply_text("机器人已启动")
 
-    elif message.text == "停止交易":
-        running = False
-        bot.send_message(CHAT_ID, "交易系统停止")
+def balance(update, context):
+    if not check_user(update):
+        update.message.reply_text("无权限")
+        return
+    balance = exchange.fetch_balance()
+    usdt = balance['USDT']['free']
+    update.message.reply_text(f"USDT余额: {usdt}")
 
-    elif message.text == "交易统计":
-        s = get_stats()
-        bot.send_message(CHAT_ID, str(s))
+def long(update, context):
+    if not check_user(update):
+        update.message.reply_text("无权限")
+        return
+    symbol = "BTC/USDT:USDT"
+    amount = 0.001
+    exchange.create_market_buy_order(symbol, amount)
+    update.message.reply_text("已开多")
 
-    elif message.text == "最大回撤":
-        dd = max_drawdown()
-        bot.send_message(CHAT_ID, f"最大回撤: {dd}%")
+def short(update, context):
+    if not check_user(update):
+        update.message.reply_text("无权限")
+        return
+    symbol = "BTC/USDT:USDT"
+    amount = 0.001
+    exchange.create_market_sell_order(symbol, amount)
+    update.message.reply_text("已开空")
 
-def trading_loop():
-    while True:
-        if running:
-            run_strategy()
-        time.sleep(5)
+updater = Updater(TG_TOKEN, use_context=True)
+dp = updater.dispatcher
 
-threading.Thread(target=trading_loop).start()
-bot.polling()
+dp.add_handler(CommandHandler("start", start))
+dp.add_handler(CommandHandler("balance", balance))
+dp.add_handler(CommandHandler("long", long))
+dp.add_handler(CommandHandler("short", short))
+
+updater.start_polling()
+updater.idle()
